@@ -1,0 +1,70 @@
+
+function renderChart() {
+  const recent = history.slice(-50);
+  const counts = Array(10).fill(0);
+
+  recent.forEach(n => counts[Math.floor(n / 10)]++);
+
+  // Y軸は1刻み。最大値は15以上で、5の倍数にする
+  const maxValue = Math.max(
+    15,
+    Math.ceil(Math.max(...counts, 0) / 5) * 5
+  );
+
+  // 数字の表示は5刻み
+  const labels = [];
+  for (let v = maxValue; v >= 0; v--) {
+    labels.push(v % 5 === 0 ? String(v) : "");
+  }
+
+  const axis = document.createElement("div");
+  axis.className = "yaxis";
+  axis.style.justifyContent = "space-between";
+  axis.innerHTML = labels.map(v => `<span>${v}</span>`).join("");
+
+  const plot = document.createElement("div");
+  plot.className = "plot";
+
+  const grid = document.createElement("div");
+  grid.className = "gridlines";
+  grid.style.height = "240px";
+  grid.style.background = `
+    repeating-linear-gradient(
+      to bottom,
+      #dce3ec 0,
+      #dce3ec 1px,
+      transparent 1px,
+      transparent ${240 / maxValue}px
+    )
+  `;
+
+  const bars = document.createElement("div");
+  bars.className = "bars";
+
+  bars.innerHTML = counts.map((v, i) => `
+    <div class="barcol">
+      <span class="count">${v}</span>
+      <div class="bar"
+        title="${i * 10}〜${i * 10 + 9}: ${v}回"
+        style="height:${v / maxValue * 100}%">
+      </div>
+    </div>
+  `).join("");
+
+  grid.appendChild(bars);
+  plot.appendChild(grid);
+
+  const xlabels = document.createElement("div");
+  xlabels.className = "xlabels";
+  xlabels.innerHTML = counts.map((_, i) =>
+    `<span>${String(i * 10).padStart(2, "0")}</span>`
+  ).join("");
+
+  plot.appendChild(xlabels);
+
+  const chart = document.getElementById("chart");
+  chart.replaceChildren(axis, plot);
+
+  document.getElementById("chartNote").textContent =
+    `集計対象：直近${recent.length}回。縦軸は1刻み、数値表示は5刻みです。`;
+}
